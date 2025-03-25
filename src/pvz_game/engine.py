@@ -8,7 +8,11 @@ from pvz_game.ui import UI
 from pvz_game.entities import Plant, Zombie
 from pvz_game.ai import update_zombie_ai
 
-# Load configuration from environment variables
+# If you're using environment variables, import them here:
+from dotenv import load_dotenv
+load_dotenv()
+
+# Example environment variable usage (optional):
 SCREEN_WIDTH = int(os.getenv("SCREEN_WIDTH", 800))
 SCREEN_HEIGHT = int(os.getenv("SCREEN_HEIGHT", 600))
 FPS = int(os.getenv("FPS", 60))
@@ -26,7 +30,7 @@ class GameEngine:
 
     def run(self):
         while self.running:
-            dt = self.clock.tick(FPS) / 1000  # seconds since last frame
+            dt = self.clock.tick(FPS) / 1000.0  # seconds since last frame
             self.handle_events()
             self.update(dt)
             self.draw()
@@ -64,8 +68,13 @@ class GameEngine:
             if isinstance(entity, Zombie):
                 update_zombie_ai(entity, self.entities, dt)
 
-        # Remove entities that are marked for removal.
-        self.entities = [entity for entity in self.entities if not entity.removed]
+        # Check for removed zombies to update score
+        removed_zombies = [z for z in self.entities if isinstance(z, Zombie) and z.removed]
+        for z in removed_zombies:
+            self.ui.score += 1
+
+        # Remove all entities marked for removal (zombies, projectiles, etc.)
+        self.entities = [e for e in self.entities if not e.removed]
 
     def draw(self):
         self.screen.fill((100, 200, 100))  # Green background.
