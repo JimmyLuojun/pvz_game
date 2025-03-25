@@ -9,7 +9,6 @@ from pvz_game.entities import Plant, Zombie
 from pvz_game.ai import update_zombie_ai
 from dotenv import load_dotenv
 
-# Load environment variables (if any)
 load_dotenv()
 
 SCREEN_WIDTH = int(os.getenv("SCREEN_WIDTH", 800))
@@ -33,7 +32,7 @@ class GameEngine:
         self.ui.sun = 100  # Starting sun resource
 
         # For time-based or score-based end:
-        self.survival_time = 60  # Survive 60 seconds to win, for example
+        self.survival_time = 60  # Survive 60 seconds to win, as an example
         self.timer = 0
 
         # For wave-based or house HP:
@@ -51,14 +50,14 @@ class GameEngine:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            # Left mouse click plants a new Plant at mouse position.
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.ui.sun >= 25:  # Example cost
+                # Only deduct sun points if desired. If you want unlimited planting,
+                # you can remove the sun point check.
+                if self.ui.sun >= 25:
                     pos = pygame.mouse.get_pos()
                     plant = Plant(pos)
                     self.entities.append(plant)
                     self.ui.sun -= 25
-            # Pressing SPACE spawns a Zombie (for testing).
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     z = Zombie((SCREEN_WIDTH, SCREEN_HEIGHT // 2))
@@ -68,23 +67,24 @@ class GameEngine:
         if self.game_over or self.victory:
             return  # Freeze game state if we've already ended
 
-        # Update all entities and remove ones that are marked as removed
+        # Update all entities and collect new ones
         new_entities = []
         for e in self.entities:
             created = e.update(dt)
             if created:
                 new_entities.extend(created)
         self.entities.extend(new_entities)
-
-        # Handle plant refunds before removing them
+        
+        # Refund sun points for plants that have been removed and not yet refunded.
         for e in self.entities:
             if isinstance(e, Plant) and e.removed and not e.refunded:
                 self.ui.sun += 25  # Refund the sun cost
                 e.refunded = True
 
+        # Remove all entities that are marked as removed.
         self.entities = [e for e in self.entities if not e.removed]
 
-        # Time-based victory: track how long the player survives
+        # Time-based victory: track how long the player survives.
         self.timer += dt
         if self.timer >= self.survival_time:
             self.victory = True
@@ -97,33 +97,29 @@ class GameEngine:
             if isinstance(e, Zombie):
                 update_zombie_ai(e, self.entities, dt)
 
-        # Check collisions, remove destroyed zombies and update score
+        # Check collisions, update score for removed zombies
         removed_zombies = [z for z in self.entities if isinstance(z, Zombie) and z.removed]
         for z in removed_zombies:
-            self.ui.score += 1  # Score-based approach
+            self.ui.score += 1
         self.entities = [e for e in self.entities if not e.removed]
 
         # 1. House HP system / Classic PvZ loss condition:
-        #    If a zombie's x < 0, reduce house health
         for e in self.entities:
             if isinstance(e, Zombie) and e.position.x < 0:
                 self.house_health -= 1
-                e.removed = True  # remove the zombie
+                e.removed = True
                 if self.house_health <= 0:
-                    self.game_over = True  # Player loses
+                    self.game_over = True
         self.entities = [e for e in self.entities if not e.removed]
 
-        # 2. Check if all waves are cleared (and no zombies remain)
+        # 2. Check if all waves are cleared and no zombies remain (win condition)
         if self.level_manager.all_waves_cleared:
             if not any(isinstance(e, Zombie) for e in self.entities):
                 self.victory = True
 
-        # 3. Resource exhaustion (optional)
-        if self.ui.sun < 25:
-            # You might enforce a rule here if desired
-            pass
+        # 3. (Optional) Resource exhaustion rule can be added here if desired
 
-        # 4. Score-based goal: if the player reaches a certain score, they win
+        # 4. Score-based win condition
         if self.ui.score >= 100:
             self.victory = True
 
