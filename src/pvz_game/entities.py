@@ -37,14 +37,22 @@ class Plant(GameEntity):
         self.radius = 20
         self.shoot_timer = 0
         self.shoot_interval = 2  # Seconds between shots
+        self.projectiles_shot = 0  # Count of projectiles fired
+        self.refunded = False  # Track if sun has been refunded
 
     def update(self, dt):
         self.shoot_timer += dt
         new_entities = []
-        if self.shoot_timer >= self.shoot_interval:
+        if self.shoot_timer >= self.shoot_interval and self.projectiles_shot < 2:
             self.shoot_timer = 0
-            # Create a projectile starting from the right edge of the plant.
             new_entities.append(Projectile((self.position.x + self.radius, self.position.y)))
+            self.projectiles_shot += 1
+        if self.projectiles_shot >= 2:
+            self.removed = True
+            # Refund sun points since the plant is now finished
+            # (Make sure to check if this refund should only happen once)
+            # For example, you might add:
+            # self.refunded = True  # and in engine, if plant.removed and not plant.refunded, refund sun
         return new_entities
 
     def draw(self, surface):
@@ -56,7 +64,7 @@ class Zombie(GameEntity):
         self.color = (255, 0, 0)  # Red
         self.radius = 20
         self.speed = 50
-        self.hp = 3
+        self.hp = 1  # A single hit defeats the zombie
 
     def update(self, dt):
         self.position.x -= self.speed * dt
