@@ -1,0 +1,30 @@
+[project]
+name = "pvz-game"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Jimmy",email = "15828061015@163.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pygame (>=2.6.1,<3.0.0)"
+]
+
+[tool.poetry]
+name = "pvz_game"
+version = "0.1.0"
+description = "A Plants vs. Zombies–style game built with Python and Pygame for learning purposes."
+authors = ["Jimmy <15828061015@163.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+pygame = "^2.1.2"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
