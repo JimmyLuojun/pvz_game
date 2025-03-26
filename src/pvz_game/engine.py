@@ -14,6 +14,7 @@ load_dotenv()
 SCREEN_WIDTH = int(os.getenv("SCREEN_WIDTH", 800))
 SCREEN_HEIGHT = int(os.getenv("SCREEN_HEIGHT", 600))
 FPS = int(os.getenv("FPS", 60))
+UI_BAR_HEIGHT = 50  # We'll assume ~50px for the top HUD
 
 class GameEngine:
     def __init__(self):
@@ -51,10 +52,13 @@ class GameEngine:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Only deduct sun points if desired. If you want unlimited planting,
-                # you can remove the sun point check.
+                # Check if click is below the top HUD area
+                pos = pygame.mouse.get_pos()
+                if pos[1] < UI_BAR_HEIGHT:
+                    # Click is in the HUD area; do nothing
+                    return
+                # Otherwise, place a plant if we have enough sun
                 if self.ui.sun >= 25:
-                    pos = pygame.mouse.get_pos()
                     plant = Plant(pos)
                     self.entities.append(plant)
                     self.ui.sun -= 25

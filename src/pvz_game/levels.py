@@ -7,6 +7,7 @@ from pvz_game.entities import Zombie
 # Optionally, use environment variables for screen dimensions:
 SCREEN_WIDTH = int(os.getenv("SCREEN_WIDTH", 800))
 SCREEN_HEIGHT = int(os.getenv("SCREEN_HEIGHT", 600))
+UI_BAR_HEIGHT = 50  # Must match what's in engine.py
 
 class LevelManager:
     def __init__(self):
@@ -27,9 +28,10 @@ class LevelManager:
         if self.current_wave <= self.max_waves:
             if self.zombies_spawned_this_wave < self.zombies_per_wave:
                 if self.spawn_timer >= self.spawn_interval:
-                    y = random.randint(50, SCREEN_HEIGHT - 50)
-                    zombie = Zombie((SCREEN_WIDTH, y))
-                    entities.append(zombie)
+                    # Ensure we spawn zombies below the UI bar
+                    y = random.randint(UI_BAR_HEIGHT + 1, SCREEN_HEIGHT - 50)
+                    z = Zombie((SCREEN_WIDTH, y))
+                    entities.append(z)
                     self.zombies_spawned_this_wave += 1
                     self.spawn_timer = 0
             else:
